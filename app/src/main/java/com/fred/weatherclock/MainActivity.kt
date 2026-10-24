@@ -171,10 +171,7 @@ class MainActivity : Activity() {
     }
 
     private fun updateClock() {
-        val now = Date()
-        val second = now.time / 1000L
-        clockView.text = timeFormat.format(now)
-        clockView.colonVisible = second % 2L == 0L
+        clockView.text = timeFormat.format(Date())
     }
 
     private fun updateDate() {

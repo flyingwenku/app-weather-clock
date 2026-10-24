@@ -61,15 +61,6 @@ class SevenSegmentView @JvmOverloads constructor(
             }
         }
 
-    /** 冒号闪烁由外部每秒切换 */
-    var colonVisible: Boolean = true
-        set(value) {
-            if (field != value) {
-                field = value
-                invalidate()
-            }
-        }
-
     private val onPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val offPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
 
@@ -119,7 +110,7 @@ class SevenSegmentView @JvmOverloads constructor(
         var x = 0f
         for (ch in text) {
             if (ch == ':') {
-                if (colonVisible) drawColon(canvas, x)
+                drawColon(canvas, x)
                 x += COLON_W
             } else {
                 drawDigit(canvas, ch, x)

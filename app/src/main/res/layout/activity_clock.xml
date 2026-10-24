@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 横屏桌面时钟：左=时钟，中=室外，右=室内，底部一行小字信息。
+<!-- 横屏桌面时钟：左=大时钟，右侧上下两行=室外 / 室内，底部一行小字信息。
      刻意保持极简：只有数字和线框图标。 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -18,21 +18,21 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <!-- 七段数码管时钟（自绘，无字体依赖） -->
+        <!-- 七段数码管时钟（自绘，无字体依赖）。占主要横向空间，数字尽可能大 -->
         <com.fred.weatherclock.ui.SevenSegmentView
             android:id="@+id/clockView"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="5" />
+            android:layout_weight="7" />
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_marginTop="30dp"
-            android:layout_marginBottom="30dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
             android:background="@color/divider" />
 
-        <!-- 室外 -->
+        <!-- 右侧：室外 / 室内 上下结构 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -40,6 +40,7 @@
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
+            <!-- 室外 -->
             <ImageView
                 android:id="@+id/ivOutdoorIcon"
                 android:layout_width="42dp"
@@ -73,23 +74,17 @@
                 android:text="@string/label_outdoor"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
-        </LinearLayout>
 
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginTop="30dp"
-            android:layout_marginBottom="30dp"
-            android:background="@color/divider" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:background="@color/divider" />
 
-        <!-- 室内 -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="3"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
+            <!-- 室内 -->
             <ImageView
                 android:id="@+id/ivIndoorIcon"
                 android:layout_width="42dp"
