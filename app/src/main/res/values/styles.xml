@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 主界面：全屏、纯黑底。用系统内置 Theme.Material（API 21+），不引入 AppCompat -->
+    <style name="Theme.WeatherClock" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+    </style>
+
+    <!-- 设置页不隐藏状态栏，且输入法弹起时布局可压缩（避免输入框被挡） -->
+    <style name="Theme.WeatherClock.Settings">
+        <item name="android:windowFullscreen">false</item>
+    </style>
+
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- API 21~25 的图标回退：mipmap-anydpi-v26 下的 adaptive-icon 在旧系统上取不到，
+     这里提供一个普通 vector drawable（表盘图标），保证老手机也有正常图标。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF101010"
+        android:pathData="M8,8h92v92h-92z" />
+    <path
+        android:pathData="M30,54a24,24 0 1,0 48,0a24,24 0 1,0 -48,0"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="6" />
+    <path
+        android:pathData="M54,36L54,56M54,56L66,63"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+</vector>
