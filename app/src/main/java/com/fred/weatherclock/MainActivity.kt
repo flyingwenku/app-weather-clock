@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -53,6 +54,7 @@ class MainActivity : Activity() {
     private val executor = Executors.newSingleThreadExecutor()
 
     private var lastWeather: WeatherInfo? = null
+    private var accentColor: Int = Color.RED
 
     private var sensorManager: SensorManager? = null
     private var humiditySensor: Sensor? = null
@@ -111,9 +113,8 @@ class MainActivity : Activity() {
         bindViews()
 
         prefs = WeatherPrefs(this)
-        applyAccentColor()
+        applySettings()
 
-        tvCity.text = prefs.cityName
         tvCity.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
@@ -123,6 +124,9 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        // 从设置页返回时 Activity 不会重建（只走 onResume），
+        // 必须在这里重新应用设置，否则改完颜色/城市界面不刷新（曾出现过：只有图标变色）
+        applySettings()
         updateClock()
         updateDate()
         updateIndoorTemp()
@@ -159,12 +163,16 @@ class MainActivity : Activity() {
         tvUpdate = findViewById(R.id.tvUpdate)
     }
 
-    private fun applyAccentColor() {
-        val colorRes = if (prefs.colorScheme == 1) R.color.accent_blue else R.color.accent_red
-        val color = ContextCompat.getColor(this, colorRes)
-        clockView.setColor(color)
-        ivOutdoorIcon.setColorFilter(color)
-        ivIndoorIcon.setColorFilter(color)
+    /** 应用设置（配色 + 城市名）。onCreate 与 onResume 都要调用 */
+    private fun applySettings() {
+        accentColor = ContextCompat.getColor(
+            this,
+            if (prefs.colorScheme == 1) R.color.accent_blue else R.color.accent_red
+        )
+        clockView.setColor(accentColor)
+        ivOutdoorIcon.setColorFilter(accentColor)
+        ivIndoorIcon.setColorFilter(accentColor)
+        tvCity.text = prefs.cityName
     }
 
     private fun applyImmersive() {
@@ -231,12 +239,8 @@ class MainActivity : Activity() {
         }
         tvOutdoorDesc.text = info.description()
         ivOutdoorIcon.setImageResource(info.iconRes())
-        ivOutdoorIcon.setColorFilter(
-            ContextCompat.getColor(
-                this,
-                if (prefs.colorScheme == 1) R.color.accent_blue else R.color.accent_red
-            )
-        )
+        // setImageResource 后需重新着色
+        ivOutdoorIcon.setColorFilter(accentColor)
         tvUpdate.text = getString(R.string.updated_at, clockFormat.format(Date(info.fetchedAt)))
     }
 
