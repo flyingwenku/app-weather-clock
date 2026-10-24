@@ -14,8 +14,8 @@ import kotlin.math.min
  *
  * 为什么自绘而不是用字体：
  * - 不引入字体文件（省体积、无授权问题）
- * - 颜色（红/蓝）、粗细、发光完全可控
- * - 未点亮的段用低透明度画出来，才有真数码管的味道
+ * - 颜色（红/蓝）、粗细完全可控
+ * - 只画点亮的段：纯数字，无背景、无发光（用户要求）
  *
  * 单位空间约定：单个数字宽 1.0、高 2.0，绘制时整体缩放到可用区域。
  */
@@ -62,7 +62,6 @@ class SevenSegmentView @JvmOverloads constructor(
         }
 
     private val onPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
-    private val offPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
 
     init {
         setColor(Color.RED)
@@ -70,9 +69,7 @@ class SevenSegmentView @JvmOverloads constructor(
 
     fun setColor(color: Int) {
         onPaint.color = color
-        onPaint.setShadowLayer(0.18f, 0f, 0f, color)
-        offPaint.color = Color.argb(26, Color.red(color), Color.green(color), Color.blue(color))
-        offPaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        onPaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
         invalidate()
     }
 
@@ -132,9 +129,8 @@ class SevenSegmentView @JvmOverloads constructor(
 
     private fun drawDigit(canvas: Canvas, ch: Char, dx: Float) {
         val lit = SEGMENTS[ch] ?: return
-        for (seg in "abcdefg") {
-            val paint = if (lit.contains(seg)) onPaint else offPaint
-            canvas.drawPath(segmentPath(seg, dx), paint)
+        for (seg in lit) {
+            canvas.drawPath(segmentPath(seg, dx), onPaint)
         }
     }
 

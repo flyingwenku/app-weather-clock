@@ -15,7 +15,7 @@
     <string name="updated_at">更新 %s</string>
 
     <string name="settings_title">设置</string>
-    <string name="settings_city_hint">输入城市名，如：北京</string>
+    <string name="settings_city_hint">输入城市名，支持区县，如：南山区</string>
     <string name="settings_search">搜索</string>
     <string name="settings_save">保存并使用</string>
     <string name="settings_back">返回</string>

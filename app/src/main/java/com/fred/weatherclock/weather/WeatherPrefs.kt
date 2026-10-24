@@ -39,8 +39,8 @@ class WeatherPrefs(context: Context) {
         private const val KEY_LON = "lon"
         private const val KEY_COLOR = "color"
 
-        const val DEFAULT_CITY = "北京"
-        const val DEFAULT_LAT = 39.9042
-        const val DEFAULT_LON = 116.4074
+        const val DEFAULT_CITY = "深圳市南山区"
+        const val DEFAULT_LAT = 22.5328
+        const val DEFAULT_LON = 113.9285
     }
 }

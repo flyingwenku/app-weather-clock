@@ -27,8 +27,9 @@ object WeatherRepository {
             if (results.length() == 0) return null
             val first = results.getJSONObject(0)
             val name = first.optString("name", cityName)
-            val country = first.optString("country", "")
-            val display = if (country.isEmpty()) name else "$name·$country"
+            // 区县查询（如"南山区"）时拼上地级市，显示为"深圳市南山区"
+            val admin2 = first.optString("admin2", "")
+            val display = if (admin2.isNotEmpty() && admin2 != name) "$admin2$name" else name
             Place(display, first.getDouble("latitude"), first.getDouble("longitude"))
         } catch (e: Exception) {
             null

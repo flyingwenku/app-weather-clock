@@ -102,6 +102,11 @@ class MainActivity : Activity() {
         // 常亮：FLAG_KEEP_SCREEN_ON，无需任何权限（项目一已验证）
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        // 亮度跟随系统设置（含自动亮度）：显式声明不覆盖，本应用不强制固定亮度
+        window.attributes = window.attributes.apply {
+            screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        }
+
         setContentView(R.layout.activity_clock)
         bindViews()
 
