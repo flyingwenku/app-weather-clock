@@ -93,7 +93,8 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: phone-monitor-debug-${{ github.sha }}
+          # 用仓库名动态命名：环境层复制到新项目后无需再改这里
+          name: ${{ github.event.repository.name }}-debug-${{ github.sha }}
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
 
