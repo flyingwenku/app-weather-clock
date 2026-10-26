@@ -164,6 +164,14 @@
             android:textSize="14sp" />
 
         <TextView
+            android:id="@+id/tvBattery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <TextView
             android:id="@+id/tvUpdate"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

@@ -17,23 +17,62 @@ object WeatherRepository {
 
     private const val TIMEOUT_MS = 10000
 
-    /** 城市名 → 经纬度。无结果或失败返回 null。 */
+    /**
+     * 城市名 → 经纬度。无结果或失败返回 null。
+     *
+     * 中文地名带行政后缀时 Open-Meteo 常匹配不到（"南山区" 实际要搜 "南山"），
+     * 因此逐级降级重试：深圳市南山区 → 深圳市南山 → 南山。
+     */
     fun searchCity(cityName: String): Place? {
+        for (keyword in searchCandidates(cityName)) {
+            val place = query(keyword)
+            if (place != null) return place
+        }
+        return null
+    }
+
+    private fun query(keyword: String): Place? {
         val url = "https://geocoding-api.open-meteo.com/v1/search?name=" +
-                URLEncoder.encode(cityName, "UTF-8") + "&count=1&language=zh"
+                URLEncoder.encode(keyword, "UTF-8") + "&count=1&language=zh"
         val body = httpGet(url) ?: return null
         return try {
             val results = JSONObject(body).optJSONArray("results") ?: return null
             if (results.length() == 0) return null
             val first = results.getJSONObject(0)
-            val name = first.optString("name", cityName)
-            // 区县查询（如"南山区"）时拼上地级市，显示为"深圳市南山区"
+            val name = first.optString("name", keyword)
+            // 区县查询（如"南山"）时拼上地级市，显示为"深圳市南山"
             val admin2 = first.optString("admin2", "")
             val display = if (admin2.isNotEmpty() && admin2 != name) "$admin2$name" else name
             Place(display, first.getDouble("latitude"), first.getDouble("longitude"))
         } catch (e: Exception) {
             null
         }
+    }
+
+    /** 逐级剥离行政后缀，生成候选搜索词 */
+    private fun searchCandidates(name: String): List<String> {
+        val candidates = ArrayList<String>()
+
+        fun add(value: String) {
+            val v = value.trim()
+            if (v.isNotEmpty() && !candidates.contains(v)) candidates.add(v)
+        }
+
+        add(name)
+
+        var s = name.trim()
+        while (s.length > 2 && (s.endsWith("区") || s.endsWith("市") ||
+                    s.endsWith("县") || s.endsWith("省") || s.endsWith("镇"))
+        ) {
+            s = s.dropLast(1)
+            add(s)
+        }
+
+        // 再去掉地级市/省份前缀：深圳市南山 → 南山
+        val idx = maxOf(s.lastIndexOf('市'), s.lastIndexOf('省'))
+        if (idx >= 0 && idx < s.length - 1) add(s.substring(idx + 1))
+
+        return candidates
     }
 
     /** 当前天气。失败返回 null（调用方据此显示 "--"）。 */

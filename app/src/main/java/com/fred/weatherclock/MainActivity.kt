@@ -47,6 +47,7 @@ class MainActivity : Activity() {
     private lateinit var tvIndoorSource: TextView
     private lateinit var tvDate: TextView
     private lateinit var tvCity: TextView
+    private lateinit var tvBattery: TextView
     private lateinit var tvUpdate: TextView
 
     private lateinit var prefs: WeatherPrefs
@@ -73,7 +74,7 @@ class MainActivity : Activity() {
 
     private val batteryTicker = object : Runnable {
         override fun run() {
-            updateIndoorTemp()
+            updateBatteryInfo()
             handler.postDelayed(this, BATTERY_INTERVAL_MS)
         }
     }
@@ -129,7 +130,7 @@ class MainActivity : Activity() {
         applySettings()
         updateClock()
         updateDate()
-        updateIndoorTemp()
+        updateBatteryInfo()
         handler.post(ticker)
         handler.postDelayed(batteryTicker, BATTERY_INTERVAL_MS)
         refreshWeather(force = true)
@@ -160,6 +161,7 @@ class MainActivity : Activity() {
         tvIndoorSource = findViewById(R.id.tvIndoorSource)
         tvDate = findViewById(R.id.tvDate)
         tvCity = findViewById(R.id.tvCity)
+        tvBattery = findViewById(R.id.tvBattery)
         tvUpdate = findViewById(R.id.tvUpdate)
     }
 
@@ -192,22 +194,32 @@ class MainActivity : Activity() {
     }
 
     /** 室内温度：优先环境温度传感器，否则用电池温度（标注来源，不伪造） */
-    private fun updateIndoorTemp() {
-        if (ambientTempSensor != null) return
-        val temp = readBatteryTempCelsius()
-        if (temp == null) {
-            tvIndoorTemp.text = getString(R.string.na)
+    /** 电量与室内温度来自同一条电池广播，一次读取、两处更新 */
+    private fun updateBatteryInfo() {
+        val intent = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        updateBatteryLevel(intent)
+        updateIndoorTemp(intent)
+    }
+
+    private fun updateBatteryLevel(intent: Intent?) {
+        val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+        tvBattery.text = if (level < 0 || scale <= 0) {
+            getString(R.string.na)
         } else {
-            tvIndoorTemp.text = formatTemp(temp)
-            tvIndoorSource.text = getString(R.string.label_indoor_battery)
+            getString(R.string.battery_level, (level * 100f / scale).toInt())
         }
     }
 
-    private fun readBatteryTempCelsius(): Double? {
-        val intent = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+    private fun updateIndoorTemp(intent: Intent?) {
+        if (ambientTempSensor != null) return
         val tenths = intent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE)
-        if (tenths == null || tenths == Int.MIN_VALUE) return null
-        return tenths / 10.0
+        if (tenths == null || tenths == Int.MIN_VALUE) {
+            tvIndoorTemp.text = getString(R.string.na)
+        } else {
+            tvIndoorTemp.text = formatTemp(tenths / 10.0)
+            tvIndoorSource.text = getString(R.string.label_indoor_battery)
+        }
     }
 
     private fun refreshWeather(force: Boolean) {

@@ -13,6 +13,7 @@
     <string name="weather_updating">天气获取中…</string>
     <string name="weather_failed">天气暂不可用</string>
     <string name="updated_at">更新 %s</string>
+    <string name="battery_level">电量 %d%%</string>
 
     <string name="settings_title">设置</string>
     <string name="settings_city_hint">输入城市名，支持区县，如：南山区</string>
