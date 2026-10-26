@@ -24,6 +24,11 @@ android {
         resourceConfigurations.add("zh")
     }
 
+    buildFeatures {
+        // AGP 8 起 BuildConfig 默认不生成，用到（如显示版本号）必须显式开启
+        buildConfig = true
+    }
+
     buildTypes {
         getByName("debug") {
             // 优化点 #5：debug 关闭 R8 与资源缩减（构建中最耗时的一步）
