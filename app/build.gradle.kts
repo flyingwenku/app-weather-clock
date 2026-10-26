@@ -15,8 +15,10 @@ android {
         applicationId = "com.fred.weatherclock"
         minSdk = 21          // Android 5.0：本项目面向旧手机，门槛必须放低
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // 版本管理：每次发布都要递增，先改这里再提交。
+        // versionCode 整数递增（商店要求）；versionName 对外可见，归档文件名也用它。
+        versionCode = 2
+        versionName = "1.1"
 
         // 优化点 #7：限制语言资源，减少资源合并开销
         resourceConfigurations.add("zh")

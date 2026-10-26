@@ -41,6 +41,9 @@ class SettingsActivity : Activity() {
         val btnBack = findViewById<Button>(R.id.btnBack)
         val rgColor = findViewById<RadioGroup>(R.id.rgColor)
 
+        findViewById<TextView>(R.id.tvVersion).text =
+            getString(R.string.settings_version, BuildConfig.VERSION_NAME)
+
         etKey.setText(prefs.apiKey)
         etCity.setText(prefs.cityName)
         etCity.setSelection(etCity.text.length)

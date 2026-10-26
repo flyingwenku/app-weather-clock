@@ -34,4 +34,5 @@
     <string name="settings_search_none">请先搜索城市</string>
     <string name="settings_search_fail">未找到，请检查 Key、城市名与网络</string>
     <string name="settings_search_found">已找到：%s</string>
+    <string name="settings_version">版本 %s</string>
 </resources>

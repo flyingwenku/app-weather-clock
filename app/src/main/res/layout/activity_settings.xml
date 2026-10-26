@@ -154,6 +154,15 @@
             android:layout_marginTop="28dp"
             android:text="@string/settings_back"
             android:textSize="14sp" />
+
+        <!-- 版本号：装在手机上的到底是哪一版，一眼可见 -->
+        <TextView
+            android:id="@+id/tvVersion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
     </LinearLayout>
 
 </ScrollView>
