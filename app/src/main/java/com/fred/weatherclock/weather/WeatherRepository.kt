@@ -30,17 +30,30 @@ object WeatherRepository {
 
     private const val TIMEOUT_MS = 10000
 
+    /**
+     * 内置默认 Key：换手机不用再重新配置。用户在设置里填的 Key 优先级更高。
+     *
+     * ⚠️ 风险：Key 明文打包在 apk 内，反编译即可提取。
+     * 自用阶段可接受（高德对个人 Web 服务有免费额度），
+     * 但若将来上架，必须在高德控制台给这个 Key 设置每日配额上限，防止被盗刷。
+     */
+    const val BUILTIN_KEY = "42ccd6af04087854bc5116f4da48e3da"
+
     /** 搜索城市。有 Key 走高德，无 Key 走 Open-Meteo。 */
     fun searchCity(cityName: String, apiKey: String): Place? =
         if (apiKey.isBlank()) searchByOpenMeteo(cityName) else searchByAmap(cityName, apiKey)
 
-    /** 取当前天气。有 adcode + Key 走高德，否则用经纬度走 Open-Meteo。 */
-    fun fetch(place: Place, apiKey: String): WeatherInfo? =
+    /**
+     * 取当前天气。有 adcode + Key 走高德；
+     * 高德失败（Key 失效 / 超额）或未配置 adcode 时，用经纬度退回 Open-Meteo，
+     * 保证至少还有温度可用，不会出现"天气一直空白"。
+     */
+    fun fetch(place: Place, apiKey: String): WeatherInfo? {
         if (place.adcode.isNotEmpty() && apiKey.isNotBlank()) {
-            fetchByAmap(place.adcode, apiKey)
-        } else {
-            fetchByOpenMeteo(place.latitude, place.longitude)
+            fetchByAmap(place.adcode, apiKey)?.let { return it }
         }
+        return fetchByOpenMeteo(place.latitude, place.longitude)
+    }
 
     // ==================== 高德 ====================
 

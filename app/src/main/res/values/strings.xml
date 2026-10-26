@@ -19,10 +19,10 @@
 
     <!-- 天气数据源 -->
     <string name="settings_key_title">高德 Web 服务 Key（天气数据源）</string>
-    <string name="settings_key_hint">填入 Key；留空则用境外源 Open-Meteo</string>
+    <string name="settings_key_hint">留空即用内置 Key；想换成自己的可填入</string>
     <string name="settings_key_save">保存</string>
     <string name="settings_key_saved">Key 已保存</string>
-    <string name="settings_key_apply">到 console.amap.com 申请，服务平台选「Web 服务」</string>
+    <string name="settings_key_apply">内置 Key 已默认生效；换自己的到 console.amap.com 申请，服务平台选「Web 服务」</string>
 
     <string name="settings_city_hint">输入城市名，支持区县，如：宝安区</string>
     <string name="settings_search">搜索</string>

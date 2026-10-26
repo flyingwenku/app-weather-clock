@@ -232,7 +232,7 @@ class MainActivity : Activity() {
 
         tvOutdoorDesc.text = getString(R.string.weather_updating)
         executor.execute {
-            val info = WeatherRepository.fetch(currentPlace(), prefs.apiKey)
+            val info = WeatherRepository.fetch(currentPlace(), prefs.effectiveKey)
             runOnUiThread {
                 if (info != null) {
                     lastWeather = info

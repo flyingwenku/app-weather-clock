@@ -82,7 +82,7 @@ class SettingsActivity : Activity() {
         tvSearchResult.text = getString(R.string.weather_updating)
 
         executor.execute {
-            val place = WeatherRepository.searchCity(keyword, prefs.apiKey)
+            val place = WeatherRepository.searchCity(keyword, prefs.effectiveKey)
             runOnUiThread {
                 if (place == null) {
                     tvSearchResult.text = getString(R.string.settings_search_fail)

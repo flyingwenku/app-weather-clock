@@ -32,12 +32,16 @@ class WeatherPrefs(context: Context) {
             prefs.edit().putString(KEY_ADCODE, value).apply()
         }
 
-    /** 高德 Web 服务 Key。为空则退回境外源 Open-Meteo */
+    /** 用户在设置里填的 Key，可为空 */
     var apiKey: String
         get() = prefs.getString(KEY_API_KEY, "") ?: ""
         set(value) {
             prefs.edit().putString(KEY_API_KEY, value).apply()
         }
+
+    /** 实际生效的 Key：用户填的优先，为空则用内置默认 Key */
+    val effectiveKey: String
+        get() = apiKey.takeIf { it.isNotBlank() } ?: WeatherRepository.BUILTIN_KEY
 
     /** 0 = 红，1 = 蓝 */
     var colorScheme: Int
