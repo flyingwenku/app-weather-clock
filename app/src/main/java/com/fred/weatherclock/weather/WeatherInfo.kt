@@ -5,26 +5,31 @@ import com.fred.weatherclock.R
 data class WeatherInfo(
     val temperature: Double,
     val humidity: Int?,
-    val code: Int,
+    /** 中文天气现象，如「晴」「多云」「小雨」。高德直接返回，无需再映射编码 */
+    val text: String,
     val fetchedAt: Long = System.currentTimeMillis()
 )
 
-/** WMO weather_code → 图标 */
-fun WeatherInfo.iconRes(): Int = when (code) {
-    0, 1 -> R.drawable.ic_sun
-    2, 3 -> R.drawable.ic_cloud
-    45, 48 -> R.drawable.ic_fog
-    in 51..67, 80, 81, 82 -> R.drawable.ic_rain
-    in 71..77, 85, 86 -> R.drawable.ic_snow
-    95, 96, 99 -> R.drawable.ic_thunder
+/**
+ * 中文天气现象 → 图标。
+ * 判断顺序由特殊到一般：「雷雨」归雷，「雨夹雪」归雪。
+ */
+fun WeatherInfo.iconRes(): Int = when {
+    text.contains("雷") -> R.drawable.ic_thunder
+    text.contains("雪") -> R.drawable.ic_snow
+    text.contains("雨") -> R.drawable.ic_rain
+    text.contains("雾") || text.contains("霾") || text.contains("尘") || text.contains("沙") ->
+        R.drawable.ic_fog
+
+    text.contains("晴") -> R.drawable.ic_sun
     else -> R.drawable.ic_cloud
 }
 
-/** WMO weather_code → 中文描述（只保留最简词汇，符合"极简"定位） */
-fun WeatherInfo.description(): String = when (code) {
+/** WMO weather_code → 中文（仅 Open-Meteo 兜底时用） */
+fun wmoText(code: Int): String = when (code) {
     0 -> "晴"
     1 -> "大部晴朗"
-    2 -> "局部多云"
+    2 -> "多云"
     3 -> "阴"
     45, 48 -> "雾"
     in 51..57 -> "毛毛雨"

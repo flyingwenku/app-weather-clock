@@ -12,7 +12,7 @@ import com.fred.weatherclock.weather.WeatherRepository
 import java.util.concurrent.Executors
 
 /**
- * 设置：城市（免 Key 地理编码）+ 数字颜色（红/蓝）。
+ * 设置：天气数据源 Key + 城市（支持区县）+ 数字颜色（红/蓝）。
  * 不用定位权限——老手机定位慢、权限弹窗烦，直接让用户搜城市更省事。
  */
 class SettingsActivity : Activity() {
@@ -21,6 +21,7 @@ class SettingsActivity : Activity() {
     private val executor = Executors.newSingleThreadExecutor()
     private var pendingPlace: WeatherRepository.Place? = null
 
+    private lateinit var etKey: EditText
     private lateinit var etCity: EditText
     private lateinit var tvSearchResult: TextView
     private lateinit var btnSave: Button
@@ -31,19 +32,23 @@ class SettingsActivity : Activity() {
 
         prefs = WeatherPrefs(this)
 
+        etKey = findViewById(R.id.etKey)
         etCity = findViewById(R.id.etCity)
         tvSearchResult = findViewById(R.id.tvSearchResult)
         btnSave = findViewById(R.id.btnSave)
+        val btnSaveKey = findViewById<Button>(R.id.btnSaveKey)
         val btnSearch = findViewById<Button>(R.id.btnSearch)
         val btnBack = findViewById<Button>(R.id.btnBack)
         val rgColor = findViewById<RadioGroup>(R.id.rgColor)
 
+        etKey.setText(prefs.apiKey)
         etCity.setText(prefs.cityName)
         etCity.setSelection(etCity.text.length)
-        if (prefs.colorScheme == 1) {
-            rgColor.check(R.id.rbBlue)
-        } else {
-            rgColor.check(R.id.rbRed)
+        rgColor.check(if (prefs.colorScheme == 1) R.id.rbBlue else R.id.rbRed)
+
+        btnSaveKey.setOnClickListener {
+            prefs.apiKey = etKey.text.toString().trim()
+            Toast.makeText(this, R.string.settings_key_saved, Toast.LENGTH_SHORT).show()
         }
 
         btnSearch.setOnClickListener { searchCity() }
@@ -55,6 +60,7 @@ class SettingsActivity : Activity() {
                 return@setOnClickListener
             }
             prefs.cityName = place.name
+            prefs.adcode = place.adcode
             prefs.latitude = place.latitude
             prefs.longitude = place.longitude
             finish()
@@ -76,16 +82,13 @@ class SettingsActivity : Activity() {
         tvSearchResult.text = getString(R.string.weather_updating)
 
         executor.execute {
-            val place = WeatherRepository.searchCity(keyword)
+            val place = WeatherRepository.searchCity(keyword, prefs.apiKey)
             runOnUiThread {
                 if (place == null) {
                     tvSearchResult.text = getString(R.string.settings_search_fail)
                 } else {
                     pendingPlace = place
-                    tvSearchResult.text = getString(
-                        R.string.settings_search_found,
-                        place.name, place.latitude, place.longitude
-                    )
+                    tvSearchResult.text = getString(R.string.settings_search_found, place.name)
                     btnSave.isEnabled = true
                 }
             }

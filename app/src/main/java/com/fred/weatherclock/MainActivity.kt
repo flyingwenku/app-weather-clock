@@ -22,7 +22,6 @@ import com.fred.weatherclock.ui.SevenSegmentView
 import com.fred.weatherclock.weather.WeatherInfo
 import com.fred.weatherclock.weather.WeatherPrefs
 import com.fred.weatherclock.weather.WeatherRepository
-import com.fred.weatherclock.weather.description
 import com.fred.weatherclock.weather.iconRes
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -222,6 +221,9 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun currentPlace(): WeatherRepository.Place =
+        WeatherRepository.Place(prefs.cityName, prefs.adcode, prefs.latitude, prefs.longitude)
+
     private fun refreshWeather(force: Boolean) {
         val last = lastWeather
         if (!force && last != null &&
@@ -230,7 +232,7 @@ class MainActivity : Activity() {
 
         tvOutdoorDesc.text = getString(R.string.weather_updating)
         executor.execute {
-            val info = WeatherRepository.fetch(prefs.latitude, prefs.longitude)
+            val info = WeatherRepository.fetch(currentPlace(), prefs.apiKey)
             runOnUiThread {
                 if (info != null) {
                     lastWeather = info
@@ -249,7 +251,7 @@ class MainActivity : Activity() {
         } else {
             getString(R.string.na)
         }
-        tvOutdoorDesc.text = info.description()
+        tvOutdoorDesc.text = if (info.text.isEmpty()) getString(R.string.na) else info.text
         ivOutdoorIcon.setImageResource(info.iconRes())
         // setImageResource 后需重新着色
         ivOutdoorIcon.setColorFilter(accentColor)

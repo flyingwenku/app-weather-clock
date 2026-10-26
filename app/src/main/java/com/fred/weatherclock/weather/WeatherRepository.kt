@@ -6,32 +6,134 @@ import java.net.URL
 import java.net.URLEncoder
 
 /**
- * 天气数据获取 —— Open-Meteo（**免 API Key**）。
+ * 天气数据获取。
  *
- * 选它的理由：不需要注册账号、不需要保管密钥，先把链路跑通。
- * 换国内数据源（和风 / 高德）时只需改这个文件。
+ * 数据源策略（两者共一个入口，按是否配置 Key 自动选择）：
+ * 1. **配置了高德 Web 服务 Key → 高德**
+ *    为什么必须用国内源：Open-Meteo 收录的中文地名常缺行政前缀，
+ *    搜「宝安区」会匹配到**重庆市的宝安**（乡镇级），定位直接跑偏。
+ *    高德的中文地址解析有省市区分级，且返回的 adcode 可直接查天气。
+ * 2. **未配置 Key → Open-Meteo**
+ *    境外源，中文区县可能匹配错误，但无需注册即可跑通，作为兜底保留。
+ *
+ * 换数据源（例如和风）只需改本文件。
  */
 object WeatherRepository {
 
-    data class Place(val name: String, val latitude: Double, val longitude: Double)
+    data class Place(
+        val name: String,
+        /** 高德行政区划代码；Open-Meteo 结果为空串 */
+        val adcode: String,
+        val latitude: Double,
+        val longitude: Double
+    )
 
     private const val TIMEOUT_MS = 10000
 
-    /**
-     * 城市名 → 经纬度。无结果或失败返回 null。
-     *
-     * 中文地名带行政后缀时 Open-Meteo 常匹配不到（"南山区" 实际要搜 "南山"），
-     * 因此逐级降级重试：深圳市南山区 → 深圳市南山 → 南山。
-     */
-    fun searchCity(cityName: String): Place? {
+    /** 搜索城市。有 Key 走高德，无 Key 走 Open-Meteo。 */
+    fun searchCity(cityName: String, apiKey: String): Place? =
+        if (apiKey.isBlank()) searchByOpenMeteo(cityName) else searchByAmap(cityName, apiKey)
+
+    /** 取当前天气。有 adcode + Key 走高德，否则用经纬度走 Open-Meteo。 */
+    fun fetch(place: Place, apiKey: String): WeatherInfo? =
+        if (place.adcode.isNotEmpty() && apiKey.isNotBlank()) {
+            fetchByAmap(place.adcode, apiKey)
+        } else {
+            fetchByOpenMeteo(place.latitude, place.longitude)
+        }
+
+    // ==================== 高德 ====================
+
+    private fun searchByAmap(cityName: String, apiKey: String): Place? {
+        // 关键词里带"市"时（如"深圳市宝安区"），用 city 参数限定范围，避免匹配到外省同名地
+        val hint = cityHint(cityName)
+        var url = "https://restapi.amap.com/v3/geocode/geo?address=" +
+                URLEncoder.encode(cityName, "UTF-8") +
+                "&key=" + URLEncoder.encode(apiKey, "UTF-8")
+        if (hint.isNotEmpty()) {
+            url += "&city=" + URLEncoder.encode(hint, "UTF-8")
+        }
+
+        val body = httpGet(url) ?: return null
+        return try {
+            val json = JSONObject(body)
+            if (json.optString("status") != "1") return null
+            val list = json.optJSONArray("geocodes") ?: return null
+            if (list.length() == 0) return null
+
+            // 优先取区县/城市级结果，跳过乡镇/村庄级（防"宝安"匹配到重庆的乡镇）
+            var target = list.getJSONObject(0)
+            for (i in 0 until list.length()) {
+                val item = list.getJSONObject(i)
+                val level = item.optString("level", "")
+                if (level.contains("区县") || level.contains("城市") || level.contains("省会")) {
+                    target = item
+                    break
+                }
+            }
+
+            val district = target.optString("district", "")
+            val city = target.optString("city", "")
+            val name = when {
+                district.isNotEmpty() && city.isNotEmpty() -> "$city$district"
+                district.isNotEmpty() -> district
+                city.isNotEmpty() -> city
+                else -> target.optString("formatted_address", cityName)
+            }
+
+            val parts = target.optString("location", "").split(",")
+            Place(
+                name = name,
+                adcode = target.optString("adcode", ""),
+                latitude = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0,
+                longitude = parts.getOrNull(1)?.toDoubleOrNull() ?: 0.0
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun fetchByAmap(adcode: String, apiKey: String): WeatherInfo? {
+        val url = "https://restapi.amap.com/v3/weather/weatherInfo?city=" +
+                URLEncoder.encode(adcode, "UTF-8") +
+                "&key=" + URLEncoder.encode(apiKey, "UTF-8") +
+                "&extensions=base"
+        val body = httpGet(url) ?: return null
+        return try {
+            val json = JSONObject(body)
+            if (json.optString("status") != "1") return null
+            val lives = json.optJSONArray("lives") ?: return null
+            if (lives.length() == 0) return null
+
+            val live = lives.getJSONObject(0)
+            val temp = live.optString("temperature").toDoubleOrNull() ?: return null
+            WeatherInfo(
+                temperature = temp,
+                humidity = live.optString("humidity").toIntOrNull(),
+                text = live.optString("weather", "")
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** 从"深圳市宝安区"这类全称里提取城市限定词"深圳市" */
+    private fun cityHint(name: String): String {
+        val idx = name.indexOf('市')
+        return if (idx > 0) name.substring(0, idx + 1) else ""
+    }
+
+    // ============ Open-Meteo（未配置 Key 时的兜底） ============
+
+    private fun searchByOpenMeteo(cityName: String): Place? {
         for (keyword in searchCandidates(cityName)) {
-            val place = query(keyword)
+            val place = queryOpenMeteo(keyword)
             if (place != null) return place
         }
         return null
     }
 
-    private fun query(keyword: String): Place? {
+    private fun queryOpenMeteo(keyword: String): Place? {
         val url = "https://geocoding-api.open-meteo.com/v1/search?name=" +
                 URLEncoder.encode(keyword, "UTF-8") + "&count=1&language=zh"
         val body = httpGet(url) ?: return null
@@ -40,16 +142,15 @@ object WeatherRepository {
             if (results.length() == 0) return null
             val first = results.getJSONObject(0)
             val name = first.optString("name", keyword)
-            // 区县查询（如"南山"）时拼上地级市，显示为"深圳市南山"
             val admin2 = first.optString("admin2", "")
             val display = if (admin2.isNotEmpty() && admin2 != name) "$admin2$name" else name
-            Place(display, first.getDouble("latitude"), first.getDouble("longitude"))
+            Place(display, "", first.getDouble("latitude"), first.getDouble("longitude"))
         } catch (e: Exception) {
             null
         }
     }
 
-    /** 逐级剥离行政后缀，生成候选搜索词 */
+    /** 逐级剥离行政后缀，生成候选搜索词（"深圳市南山区" → "深圳市南山" → "南山"） */
     private fun searchCandidates(name: String): List<String> {
         val candidates = ArrayList<String>()
 
@@ -68,15 +169,13 @@ object WeatherRepository {
             add(s)
         }
 
-        // 再去掉地级市/省份前缀：深圳市南山 → 南山
         val idx = maxOf(s.lastIndexOf('市'), s.lastIndexOf('省'))
         if (idx >= 0 && idx < s.length - 1) add(s.substring(idx + 1))
 
         return candidates
     }
 
-    /** 当前天气。失败返回 null（调用方据此显示 "--"）。 */
-    fun fetch(latitude: Double, longitude: Double): WeatherInfo? {
+    private fun fetchByOpenMeteo(latitude: Double, longitude: Double): WeatherInfo? {
         val url = "https://api.open-meteo.com/v1/forecast" +
                 "?latitude=$latitude&longitude=$longitude" +
                 "&current=temperature_2m,relative_humidity_2m,weather_code&timezone=auto"
@@ -91,12 +190,14 @@ object WeatherRepository {
             WeatherInfo(
                 temperature = temp,
                 humidity = humidity,
-                code = current.optInt("weather_code", 3)
+                text = wmoText(current.optInt("weather_code", 3))
             )
         } catch (e: Exception) {
             null
         }
     }
+
+    // ==================== 公共 ====================
 
     private fun httpGet(urlString: String): String? {
         var conn: HttpURLConnection? = null

@@ -10,20 +10,28 @@
     <string name="unit_celsius">°C</string>
     <string name="unit_humidity">湿度 %d%%</string>
 
-    <string name="weather_updating">天气获取中…</string>
+    <string name="weather_updating">获取中…</string>
     <string name="weather_failed">天气暂不可用</string>
     <string name="updated_at">更新 %s</string>
     <string name="battery_level">电量 %d%%</string>
 
     <string name="settings_title">设置</string>
-    <string name="settings_city_hint">输入城市名，支持区县，如：南山区</string>
+
+    <!-- 天气数据源 -->
+    <string name="settings_key_title">高德 Web 服务 Key（天气数据源）</string>
+    <string name="settings_key_hint">填入 Key；留空则用境外源 Open-Meteo</string>
+    <string name="settings_key_save">保存</string>
+    <string name="settings_key_saved">Key 已保存</string>
+    <string name="settings_key_apply">到 console.amap.com 申请，服务平台选「Web 服务」</string>
+
+    <string name="settings_city_hint">输入城市名，支持区县，如：宝安区</string>
     <string name="settings_search">搜索</string>
     <string name="settings_save">保存并使用</string>
     <string name="settings_back">返回</string>
     <string name="settings_color">数字颜色</string>
     <string name="settings_color_red">红</string>
     <string name="settings_color_blue">蓝</string>
-    <string name="settings_search_none">没找到这个城市</string>
-    <string name="settings_search_fail">搜索失败，请检查网络</string>
-    <string name="settings_search_found">已找到：%s（%.2f, %.2f）</string>
+    <string name="settings_search_none">请先搜索城市</string>
+    <string name="settings_search_fail">未找到，请检查 Key、城市名与网络</string>
+    <string name="settings_search_found">已找到：%s</string>
 </resources>

@@ -25,6 +25,20 @@ class WeatherPrefs(context: Context) {
             prefs.edit().putFloat(KEY_LON, value.toFloat()).apply()
         }
 
+    /** 高德行政区划代码。为空则退回用经纬度取天气（Open-Meteo） */
+    var adcode: String
+        get() = prefs.getString(KEY_ADCODE, "") ?: ""
+        set(value) {
+            prefs.edit().putString(KEY_ADCODE, value).apply()
+        }
+
+    /** 高德 Web 服务 Key。为空则退回境外源 Open-Meteo */
+    var apiKey: String
+        get() = prefs.getString(KEY_API_KEY, "") ?: ""
+        set(value) {
+            prefs.edit().putString(KEY_API_KEY, value).apply()
+        }
+
     /** 0 = 红，1 = 蓝 */
     var colorScheme: Int
         get() = prefs.getInt(KEY_COLOR, 0)
@@ -37,6 +51,8 @@ class WeatherPrefs(context: Context) {
         private const val KEY_CITY = "city_name"
         private const val KEY_LAT = "lat"
         private const val KEY_LON = "lon"
+        private const val KEY_ADCODE = "adcode"
+        private const val KEY_API_KEY = "api_key"
         private const val KEY_COLOR = "color"
 
         const val DEFAULT_CITY = "深圳市南山区"
